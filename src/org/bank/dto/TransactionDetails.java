@@ -75,6 +75,13 @@ public class TransactionDetails {
 	public void setAccountnumber(long accountnumber) {
 		this.accountnumber = accountnumber;
 	}
+	@Override
+	public String toString() {
+		return "TransactionDetails [transactionid=" + transactionid + ", transactiontype=" + transactiontype
+				+ ", transactiondate=" + transactiondate + ", transactiontime=" + transactiontime
+				+ ", transactionamount=" + transactionamount + ", balanceamount=" + balanceamount + ", accountnumber="
+				+ accountnumber + "]";
+	}
 	
 	
 	

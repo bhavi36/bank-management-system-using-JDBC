@@ -11,8 +11,8 @@ public class CustomerDetails {
 	private String designation;
 	private long accountnumber;
 	private int pin;
-	private String ifsccode="JSP1234";
-	private String branch="JNTU";
+	private String ifsccode;
+	private String branch;
 	private String typeofaccount;
 	private double amount;
 	private String gender;

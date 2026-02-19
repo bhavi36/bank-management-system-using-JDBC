@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 
 import org.bank.dto.TransactionDetails;
+import org.bank.util.DBConnection;
 
 public class TransactionDAO {
 	private static final String insert_transaction_details = "insert into transaction_details(Transaction_Type, Transaction_Date, Transaction_Time, Transaction_Amount, Balance, Account_Number) values (?,?,?,?,?,?)";
@@ -15,8 +16,7 @@ public class TransactionDAO {
 	
 	public boolean insertTransactionDetails(TransactionDetails transactionDetails) {
 		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/bank_management_system", "root", "A+b33B-a");
+			Connection connection = DBConnection.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(insert_transaction_details);
 			preparedStatement.setString(1, transactionDetails.getTransactiontype());
 			preparedStatement.setDate(2, Date.valueOf(transactionDetails.getTransactiondate()));
@@ -31,10 +31,6 @@ public class TransactionDAO {
 			}else {
 				return false;
 			}
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
