@@ -1,9 +1,13 @@
 package org.bank.main;
 
+import java.util.List;
 import java.util.Scanner;
 
 import org.bank.dto.CustomerDetails;
+import org.bank.dto.TransactionDetails;
+import org.bank.service.AdminService;
 import org.bank.service.CustomerService;
+import org.bank.service.TransactionService;
 
 public class Main {
 	public static void main(String[] args) {
@@ -12,6 +16,10 @@ public class Main {
 		CustomerDetails customer = new CustomerDetails();
 		
 		CustomerService customerService = new CustomerService();
+		
+		TransactionService transactionService = new TransactionService();
+		
+		AdminService adminService = new AdminService();
 		
 		
 		Scanner scanner = new Scanner(System.in);
@@ -36,7 +44,7 @@ public class Main {
 			System.out.println("Customer Registration");
 
 			System.out.println("Enter Name:");
-			customer.setCustomername(scanner.next());
+			customer.setCustomername(scanner.nextLine());
 
 			System.out.println("Enter Mobile:");
 			customer.setCustomermobilenumber(scanner.nextLong());
@@ -79,27 +87,44 @@ public class Main {
 			String input = scanner.nextLine();
 			System.out.println("Enter pin: ");
 			int pin = Integer.valueOf(scanner.nextLine());
-			if(customerService.customerLogin(input,pin)) {
-				System.out.println("Enter \n 1.For Credit \n 2.For Debit \n 3.For CheckBalance \n 4.For Statement \n 5.For Close Account \n 6.For Change Pin");
+			customer=customerService.customerLogin(input,pin);
+			if(customer!=null) {
+				System.out.println("Enter \n 1.For Withdraw \n 2.For Deposit \n 3.For CheckBalance \n 4.For Statement \n 5.For Close Account \n 6.For Change Pin");
 				switch(Integer.valueOf(scanner.nextLine())) {
 				case 1 :{
-					System.out.println("Credit");
+					System.out.println("Withdraw...");
+					System.out.print("Enter amount to withdraw: ");
+					double amount = scanner.nextDouble();
+					customerService.withdraw(customer.getAccountnumber(), amount);
+					
 					break;
 				}
 				case 2 :{
-					System.out.println("Debit");
+					System.out.println("____Deposit_____");
+					System.out.print("Enter amount to deposit: ");
+					double amount = scanner.nextDouble();
+					customerService.deposit(customer.getAccountnumber(), amount);
+			
 					break;
 				}
 				case 3 :{
 					System.out.println("CheckBalance");
+					//System.out.println(customer.getAccountnumber());
+					//System.out.println(customerService.getBalance(customer.getAccountnumber()));
+					System.out.println(customer.getAmount());
 					break;
 				}
 				case 4 :{
 					System.out.println("Statement");
+					List<TransactionDetails> list = transactionService.getTransactionByAccNo(customer.getAccountnumber());
+					for(TransactionDetails transaction:list) {
+						System.out.println(transaction);
+					}
 					break;
 				}
 				case 5 :{
 					System.out.println(" Close Account");
+					
 					break;
 				}
 				case 6 :{
@@ -119,6 +144,31 @@ public class Main {
 		}
 		case 3:{
 			System.out.println("Admin Login");
+			
+			System.out.println("Enter Admin Email id");
+			String emailid = scanner.next();
+			System.out.println("Enter Admin Password");
+			String password = scanner.next();
+			
+			if(adminService.adminLogin(emailid,password)) {
+				System.out.println("\n1. View all customers\n2. Delete customer\n3. Exit");
+				int choice = Integer.valueOf(scanner.nextLine());
+				
+				switch(choice) {
+				case 1:{
+					System.out.println("Viewing all customers: ");
+					List<CustomerDetails> allCustomers = adminService.getAllCustomers();
+					
+					for(CustomerDetails customerDetails:allCustomers) {
+						System.out.println(customerDetails);
+					}
+				}
+				case 2: {
+					System.out.println("DeleteCustomerr");
+				}
+				}
+			}
+				
 			break;
 		}
 		default:{

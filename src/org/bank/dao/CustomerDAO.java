@@ -11,9 +11,10 @@ public class CustomerDAO {
 	public boolean isAccountNumberExists(long accountNumber) {
 	    String query = "SELECT Customer_Account_Number FROM bank_customer_details WHERE Customer_Account_Number = ?";
 
-	    try (Connection con = DBConnection.getConnection();
-	         PreparedStatement ps = con.prepareStatement(query)) {
-
+	    try {
+	    	Connection con = DBConnection.getConnection();
+	        PreparedStatement ps = con.prepareStatement(query);
+	         
 	        ps.setLong(1, accountNumber);
 
 	        ResultSet rs = ps.executeQuery();
@@ -65,9 +66,10 @@ public class CustomerDAO {
 
 	    String query = "SELECT * FROM bank_customer_details WHERE (Customer_Email_Id = ? OR Customer_Mobile_Number = ?) AND Customer_Pin = ?";
 
-	    try (Connection con = DBConnection.getConnection();
-	         PreparedStatement ps = con.prepareStatement(query)) {
-
+	    try {
+	    	Connection con = DBConnection.getConnection();
+	        PreparedStatement ps = con.prepareStatement(query);
+	    	
 	        ps.setString(1, input);
 	        ps.setString(2, input);
 	        ps.setInt(3, pin);
@@ -75,7 +77,7 @@ public class CustomerDAO {
 	        ResultSet rs = ps.executeQuery();
 
 	        if (rs.next()) {
-	            CustomerDetails customer = new CustomerDetails();
+	        	 CustomerDetails customer = new CustomerDetails();
 
 	            customer.setCustomerid(rs.getInt(1));
 	            customer.setCustomername(rs.getString(2));
@@ -102,8 +104,51 @@ public class CustomerDAO {
 
 	    return null;
 	}
-
+	
+	public double getBalance(long accNo) {
+		String query = "SELECT Amount from bank_customer_details WHERE Customer_Account_Number=?";
+		
+		try {
+			Connection con = DBConnection.getConnection();
+			PreparedStatement ps = con.prepareStatement(query);
+			
+			ps.setLong(1, accNo);
+			
+			ResultSet rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				//CustomerDetails customer = new CustomerDetails();
+				//customer.setAmount(rs.getDouble("Amount"));
+				//return customer.getAmount();
+				
+				return rs.getDouble("Amount");
+			}
+		}catch(SQLException e) {
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
+	public boolean updateBalance(long accNo,double amount) {
+		String query = "UPDATE bank_customer_details SET Amount=? WHERE Customer_Account_Number=?";
+		
+		try {
+			Connection con = DBConnection.getConnection();
+			PreparedStatement ps = con.prepareStatement(query);
+			
+			ps.setDouble(1, amount);
+			ps.setLong(2, accNo);
+			
+			int result = ps.executeUpdate();
+			
+			return result>0;
+		}catch(SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	
+	
+	
 }
-/* "INSERT INTO bank_customer_details "
-                + "(customername, customermobilenumber, aadharnumber, pannumber, emailid, address, designation, accountnumber, pin, ifsccode, branch, typeofaccount, amount, gender) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";*/
