@@ -61,7 +61,7 @@ public class AdminDAO {
 	}
 	
 	public boolean closeAccount(long accNo) {
-		String query = "DELETE * FROM bank_customer_details where Customer_Account_Number=?";
+		String query = "DELETE FROM bank_customer_details where Customer_Account_Number=?";
 		
 		try {
 			Connection con = DBConnection.getConnection();

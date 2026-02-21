@@ -7,6 +7,10 @@ import org.bank.dao.CustomerDAO;
 import org.bank.dao.TransactionDAO;
 import org.bank.dto.CustomerDetails;
 import org.bank.dto.TransactionDetails;
+import org.bank.exception.CustomerInvalidDataException;
+import org.bank.exception.InsufficientBalanceException;
+import org.bank.exception.InvalidLoginException;
+import org.bank.validation.Validation;
 
 public class CustomerService {
 	private CustomerDAO customerDAO = new CustomerDAO();
@@ -27,7 +31,19 @@ public class CustomerService {
 
 	    return accountNumber;
 	}
-	public void registerCustomer(CustomerDetails customer) {
+	public boolean registerCustomer(CustomerDetails customer) {
+		
+		if (!Validation.isValidMobile(customer.getCustomermobilenumber())) {
+		        throw new CustomerInvalidDataException("Mobile must be 10 digits");
+		}
+
+		if (!Validation.isValidPin(customer.getPin())) {
+		        throw new CustomerInvalidDataException("PIN must be 4 digits");
+		}
+
+		if (!Validation.isValidAmount(customer.getAmount())) {
+		        throw new CustomerInvalidDataException("Balance cannot be negative");
+		}
 
         long accNo = generateUniqueAccountNumber();
         customer.setAccountnumber(accNo);
@@ -35,65 +51,82 @@ public class CustomerService {
         customer.setIfsccode("JSP1234");
         customer.setBranch("JNTU");
 
-        if(customerDAO.insertCustomer(customer)) {
-        	System.out.println("Registered Successfullyy..");
-        }else {
-        	System.out.println("Not Registered...");
-        }
+        return customerDAO.insertCustomer(customer);
     }
 	public CustomerDetails customerLogin(String input,int pin) {
 
 	    
 	    CustomerDetails customer = customerDAO.getCustomerByEmailOrMobileAndPin(input, pin);
-
-	    if (customer != null) {
-
-	        if (customer.getGender().equalsIgnoreCase("Male")) {
-	            System.out.println("Welcome Mr. " + customer.getCustomername());
-	        } else if (customer.getGender().equalsIgnoreCase("Female")) {
-	            System.out.println("Welcome Mrs. " + customer.getCustomername());
-	        } else {
-	            System.out.println("Welcome " + customer.getCustomername());
-	        }
-
-	        return customer;
-	    } else {
-	        return null;
+	    
+	    if (customer == null) {
+	        throw new InvalidLoginException("Invalid Email/Mobile or PIN");
 	    }
+
+//
+//	    if (customer != null) {
+//
+//	        if (customer.getGender().equalsIgnoreCase("Male")) {
+//	            System.out.println("Welcome Mr. " + customer.getCustomername());
+//	        } else if (customer.getGender().equalsIgnoreCase("Female")) {
+//	            System.out.println("Welcome Mrs. " + customer.getCustomername());
+//	        } else {
+//	            System.out.println("Welcome " + customer.getCustomername());
+//	        }
+//
+//	        return customer;
+//	    } else {
+//	        return null;
+//	    }
+	    
+	    return customer;
 	}
 	public double getBalance(long accNo) {
 		return customerDAO.getBalance(accNo);
 	}
-	public void deposit(long accNo,double amount) {
+	public boolean deposit(long accNo,double amount) {
+		
+		if (!Validation.isValidAmount(amount)) {
+	        throw new CustomerInvalidDataException("Invalid deposit amount");
+	    }
 		
 		double currentBalance = getBalance(accNo);
-		if(currentBalance>0) {
-			if(customerDAO.updateBalance(accNo, currentBalance+amount)) {
-				System.out.println("Debited...");
-				System.out.print("Updated Balance is : ");
-				System.out.println(getBalance(accNo));
-				
-				logTransaction(accNo, "Deposit", amount, getBalance(accNo));
-			}else {
-				System.out.println("Failed...");
-			}
+		double newBalance = currentBalance+amount;
+		if(customerDAO.updateBalance(accNo, newBalance)) {
+//			System.out.println("Debited...");
+//			System.out.print("Updated Balance is : ");
+//			System.out.println(getBalance(accNo));
+//			
+			logTransaction(accNo, "DEPOSIT", amount, newBalance);
+			return true;
 		}
+		
+//		else {
+//			System.out.println("Failed...");
+//		}
+		
+		return false;
 	}
-	public void withdraw(long accNo,double amount) {
+	public boolean withdraw(long accNo,double amount) {
+		
+		if (!Validation.isValidAmount(amount)) {
+	        throw new CustomerInvalidDataException("Invalid withdraw amount");
+	    }
 		
 		double currentBalance = customerDAO.getBalance(accNo);
-		if(currentBalance>=amount) {
-			if(customerDAO.updateBalance(accNo, currentBalance-amount)) {
-				System.out.println("Withdrawn...");
-				System.out.println("Updated Balance is : ");
-				System.out.println(getBalance(accNo));
-				logTransaction(accNo, "Withdraw", amount, getBalance(accNo));
-			}
-			else
-				System.out.println("Failed...");
-		}else {
-			System.out.println("Insufficient Balance...");
+		
+		if (currentBalance < amount) {
+	        throw new InsufficientBalanceException("Insufficient Balance");
+	    }
+		double newBalance = currentBalance-amount;
+		if(customerDAO.updateBalance(accNo, newBalance)) {
+//			System.out.println("Withdrawn...");
+//			System.out.println("Updated Balance is : ");
+//			System.out.println(getBalance(accNo));
+			logTransaction(accNo, "WITHDRAW", amount, newBalance);
+			return true;
 		}
+		
+		return false;
 	}
 	
 	private void logTransaction(long accNo, String type, double amount, double newBalance) {
@@ -106,8 +139,8 @@ public class CustomerService {
 		t.setTransactiondate(LocalDate.now());
 		t.setTransactiontime(LocalTime.now());
 		
-		if(transactionDAO.insertTransactionDetails(t))
-			System.out.println("Transaction inserted...");
+		transactionDAO.insertTransactionDetails(t);
+			
 	}
 
 }
